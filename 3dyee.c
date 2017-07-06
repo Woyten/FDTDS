@@ -324,7 +324,7 @@ int main(int argc, char **argv)
 		if ((verb) && ((t%output_every) == 0)) { profs_end(h_field_update);}
 
 		if ((verb) && ((t%output_every) == 0)) {profs_start(output);}
-		(*write_output)(fp,im,file,output_every,t,EZ);		
+		//(*write_output)(fp,im,file,output_every,t,EZ);		
         	if ((verb) && ((t%output_every) == 0)) { profs_end(output); }
 	
 	}
