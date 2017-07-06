@@ -21,32 +21,32 @@ impl Field {
 
     pub fn e_x(&mut self, jx: i32, jy: i32, jz: i32) -> &mut f64 {
         let index = self.f3_off(0, jx, jy, jz);
-        &mut self.data[index]
+        unsafe { self.data.get_unchecked_mut(index) }
     }
 
     pub fn e_y(&mut self, jx: i32, jy: i32, jz: i32) -> &mut f64 {
         let index = self.f3_off(1, jx, jy, jz);
-        &mut self.data[index]
+        unsafe { self.data.get_unchecked_mut(index) }
     }
 
     pub fn e_z(&mut self, jx: i32, jy: i32, jz: i32) -> &mut f64 {
         let index = self.f3_off(2, jx, jy, jz);
-        &mut self.data[index]
+        unsafe { self.data.get_unchecked_mut(index) }
     }
 
     pub fn h_x(&mut self, jx: i32, jy: i32, jz: i32) -> &mut f64 {
         let index = self.f3_off(3, jx, jy, jz);
-        &mut self.data[index]
+        unsafe { self.data.get_unchecked_mut(index) }
     }
 
     pub fn h_y(&mut self, jx: i32, jy: i32, jz: i32) -> &mut f64 {
         let index = self.f3_off(4, jx, jy, jz);
-        &mut self.data[index]
+        unsafe { self.data.get_unchecked_mut(index) }
     }
 
     pub fn h_z(&mut self, jx: i32, jy: i32, jz: i32) -> &mut f64 {
         let index = self.f3_off(5, jx, jy, jz);
-        &mut self.data[index]
+        unsafe { self.data.get_unchecked_mut(index) }
     }
 
     fn f3_off(&self, fldnr: i32, jx: i32, jy: i32, jz: i32) -> usize {
