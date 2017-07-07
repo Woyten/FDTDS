@@ -67,7 +67,7 @@ impl FileWriter {
         let total_grid = field.total_grid;
         field::foreach_3d((0, 0, 0), (total_grid.0 - 2 * ghost.0, total_grid.1 - 2 * ghost.1, total_grid.2 - 2 * ghost.2), |ix, iy, iz| {
             self.file
-                .write_f64::<LittleEndian>(*field.e_z(ix, iy, iz))
+                .write_f64::<LittleEndian>(field.get(ix, iy, iz).e.2)
                 .unwrap();
         });
     }
