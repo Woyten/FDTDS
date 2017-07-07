@@ -1,4 +1,4 @@
 a.out
-out
+out-*
 target/
 **/*.rs.bk
