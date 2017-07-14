@@ -28,22 +28,22 @@ fn sqr<T: Copy + Mul<T>>(value: T) -> T::Output {
 fn exchange_hfields(field: &mut Field, grid: Dimensions) {
     for z in 0..grid.2 {
         for y in 0..grid.1 {
-            field.get(-1, y, z).h = field.get(grid.0 - 1, y, z).h;
-            field.get(grid.0, y, z).h = field.get(0, y, z).h;
+            field[(-1, y, z)].h = field[(grid.0 - 1, y, z)].h;
+            field[(grid.0, y, z)].h = field[(0, y, z)].h;
         }
     }
 
     for z in 0..grid.2 {
         for x in 0..grid.0 {
-            field.get(x, -1, z).h = field.get(x, grid.1 - 1, z).h;
-            field.get(x, grid.1, z).h = field.get(x, 0, z).h;
+            field[(x, -1, z)].h = field[(x, grid.1 - 1, z)].h;
+            field[(x, grid.1, z)].h = field[(x, 0, z)].h;
         }
     }
 
     for y in 0..grid.1 {
         for x in 0..grid.0 {
-            field.get(x, y, -1).h = field.get(x, y, grid.2 - 1).h;
-            field.get(x, y, grid.2).h = field.get(x, y, 0).h;
+            field[(x, y, -1)].h = field[(x, y, grid.2 - 1)].h;
+            field[(x, y, grid.2)].h = field[(x, y, 0)].h;
         }
     }
 }
@@ -51,22 +51,22 @@ fn exchange_hfields(field: &mut Field, grid: Dimensions) {
 fn exchange_efields(field: &mut Field, grid: Dimensions) {
     for z in 0..grid.2 {
         for y in 0..grid.1 {
-            field.get(-1, y, z).e = field.get(grid.0 - 1, y, z).e;
-            field.get(grid.0, y, z).e = field.get(0, y, z).e;
+            field[(-1, y, z)].e = field[(grid.0 - 1, y, z)].e;
+            field[(grid.0, y, z)].e = field[(0, y, z)].e;
         }
     }
 
     for z in 0..grid.2 {
         for x in 0..grid.0 {
-            field.get(x, -1, z).e = field.get(x, grid.1 - 1, z).e;
-            field.get(x, grid.1, z).e = field.get(x, 0, z).e;
+            field[(x, -1, z)].e = field[(x, grid.1 - 1, z)].e;
+            field[(x, grid.1, z)].e = field[(x, 0, z)].e;
         }
     }
 
     for y in 0..grid.1 {
         for x in 0..grid.0 {
-            field.get(x, y, -1).e = field.get(x, y, grid.2 - 1).e;
-            field.get(x, y, grid.2).e = field.get(x, y, 0).e;
+            field[(x, y, -1)].e = field[(x, y, grid.2 - 1)].e;
+            field[(x, y, grid.2)].e = field[(x, y, 0)].e;
         }
     }
 }
@@ -122,8 +122,8 @@ fn main() {
 
     let mut field = Field::create(grid, GHOST);
     field::foreach_3d((-GHOST.0, -GHOST.1, -GHOST.2), (grid.0 + GHOST.0, grid.1 + GHOST.1, grid.2 + GHOST.2), |ix, iy, iz| {
-        field.get(ix, iy, iz).e.2 = gauss_3d(ix as f64 * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2, x0, sigma_gauss, freq);
-        field.get(ix, iy, iz).h.1 = -gauss_3d((ix as f64 + 0.5) * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2, x0, sigma_gauss, freq);
+        field[(ix, iy, iz)].e.2 = gauss_3d(ix as f64 * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2, x0, sigma_gauss, freq);
+        field[(ix, iy, iz)].h.1 = -gauss_3d((ix as f64 + 0.5) * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2, x0, sigma_gauss, freq);
     });
 
     let cn = (dt / dx.0, dt / dx.1, dt / dx.2);
@@ -155,13 +155,13 @@ fn main() {
             } else {
                 sigma_j
             };
-            field.get(ix, iy, iz).e = (
-                (cn.1 * (field.get(ix, iy, iz).h.2 - field.get(ix, iy - 1, iz).h.2) - cn.2 * (field.get(ix, iy, iz).h.1 - field.get(ix, iy, iz - 1).h.1) +
-                     field.get(ix, iy, iz).e.0 * (1. - sigma.0 / 2.0 * dt)) / (1. + sigma.0 / 2.0 * dt),
-                (cn.2 * (field.get(ix, iy, iz).h.0 - field.get(ix, iy, iz - 1).h.0) - cn.0 * (field.get(ix, iy, iz).h.2 - field.get(ix - 1, iy, iz).h.2) +
-                     field.get(ix, iy, iz).e.1 * (1. - sigma.1 / 2.0 * dt)) / (1. + sigma.1 / 2.0 * dt),
-                (cn.0 * (field.get(ix, iy, iz).h.1 - field.get(ix - 1, iy, iz).h.1) - cn.1 * (field.get(ix, iy, iz).h.0 - field.get(ix, iy - 1, iz).h.0) +
-                     field.get(ix, iy, iz).e.2 * (1. - sigma.2 / 2.0 * dt)) / (1. + sigma.2 / 2.0 * dt),
+            field[(ix, iy, iz)].e = (
+                (cn.1 * (field[(ix, iy, iz)].h.2 - field[(ix, iy - 1, iz)].h.2) - cn.2 * (field[(ix, iy, iz)].h.1 - field[(ix, iy, iz - 1)].h.1) +
+                     field[(ix, iy, iz)].e.0 * (1. - sigma.0 / 2.0 * dt)) / (1. + sigma.0 / 2.0 * dt),
+                (cn.2 * (field[(ix, iy, iz)].h.0 - field[(ix, iy, iz - 1)].h.0) - cn.0 * (field[(ix, iy, iz)].h.2 - field[(ix - 1, iy, iz)].h.2) +
+                     field[(ix, iy, iz)].e.1 * (1. - sigma.1 / 2.0 * dt)) / (1. + sigma.1 / 2.0 * dt),
+                (cn.0 * (field[(ix, iy, iz)].h.1 - field[(ix - 1, iy, iz)].h.1) - cn.1 * (field[(ix, iy, iz)].h.0 - field[(ix, iy - 1, iz)].h.0) +
+                     field[(ix, iy, iz)].e.2 * (1. - sigma.2 / 2.0 * dt)) / (1. + sigma.2 / 2.0 * dt),
             );
         });
 
@@ -183,13 +183,13 @@ fn main() {
             } else {
                 sigma_j
             };
-            field.get(ix, iy, iz).h = (
-                (cn.1 * (field.get(ix, iy, iz).e.2 - field.get(ix, iy + 1, iz).e.2) - cn.2 * (field.get(ix, iy, iz).e.1 - field.get(ix, iy, iz + 1).e.1) +
-                     field.get(ix, iy, iz).h.0 * (1. - sigma.0 / 2.0 * dt)) / (1. + sigma.0 / 2.0 * dt),
-                (cn.2 * (field.get(ix, iy, iz).e.0 - field.get(ix, iy, iz + 1).e.0) - cn.0 * (field.get(ix, iy, iz).e.2 - field.get(ix + 1, iy, iz).e.2) +
-                     field.get(ix, iy, iz).h.1 * (1. - sigma.1 / 2.0 * dt)) / (1. + sigma.1 / 2.0 * dt),
-                (cn.0 * (field.get(ix, iy, iz).e.1 - field.get(ix + 1, iy, iz).e.1) - cn.1 * (field.get(ix, iy, iz).e.0 - field.get(ix, iy + 1, iz).e.0) +
-                     field.get(ix, iy, iz).h.2 * (1. - sigma.2 / 2.0 * dt)) / (1. + sigma.2 / 2.0 * dt),
+            field[(ix, iy, iz)].h = (
+                (cn.1 * (field[(ix, iy, iz)].e.2 - field[(ix, iy + 1, iz)].e.2) - cn.2 * (field[(ix, iy, iz)].e.1 - field[(ix, iy, iz + 1)].e.1) +
+                     field[(ix, iy, iz)].h.0 * (1. - sigma.0 / 2.0 * dt)) / (1. + sigma.0 / 2.0 * dt),
+                (cn.2 * (field[(ix, iy, iz)].e.0 - field[(ix, iy, iz + 1)].e.0) - cn.0 * (field[(ix, iy, iz)].e.2 - field[(ix + 1, iy, iz)].e.2) +
+                     field[(ix, iy, iz)].h.1 * (1. - sigma.1 / 2.0 * dt)) / (1. + sigma.1 / 2.0 * dt),
+                (cn.0 * (field[(ix, iy, iz)].e.1 - field[(ix + 1, iy, iz)].e.1) - cn.1 * (field[(ix, iy, iz)].e.0 - field[(ix, iy + 1, iz)].e.0) +
+                     field[(ix, iy, iz)].h.2 * (1. - sigma.2 / 2.0 * dt)) / (1. + sigma.2 / 2.0 * dt),
             )
         });
 

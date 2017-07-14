@@ -1,4 +1,5 @@
 use Vector;
+use std::ops::{Index, IndexMut};
 
 pub type Dimensions = (i32, i32, i32);
 pub type GridPoint = (i32, i32, i32);
@@ -26,14 +27,27 @@ impl Field {
         }
     }
 
-    pub fn get(&mut self, jx: i32, jy: i32, jz: i32) -> &mut FieldStrength {
-        let index = self.f3_off(0, jx, jy, jz);
-        unsafe { self.data.get_unchecked_mut(index) }
+    fn get_index_for_point(&self, grid_point: GridPoint) -> usize {
+        let z = grid_point.2 + self.ghost.2;
+        let yz = grid_point.1 + self.ghost.1 + z * self.total_grid.1;
+        let xyz = grid_point.0 + self.ghost.0 + yz * self.total_grid.0;
+        xyz as usize
     }
+}
 
-    fn f3_off(&self, fldnr: i32, jx: i32, jy: i32, jz: i32) -> usize {
-        let index = jx + self.ghost.0 + self.total_grid.0 * (jy + self.ghost.1 + self.total_grid.1 * (jz + self.ghost.2 + self.total_grid.2 * fldnr));
-        index as usize
+impl Index<GridPoint> for Field {
+    type Output = FieldStrength;
+
+    fn index(&self, grid_point: GridPoint) -> &Self::Output {
+        let index = self.get_index_for_point(grid_point);
+        unsafe { self.data.get_unchecked(index) }
+    }
+}
+
+impl IndexMut<GridPoint> for Field {
+    fn index_mut(&mut self, grid_point: GridPoint) -> &mut Self::Output {
+        let index = self.get_index_for_point(grid_point);
+        unsafe { self.data.get_unchecked_mut(index) }
     }
 }
 
