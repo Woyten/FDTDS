@@ -200,7 +200,7 @@ fn main() {
 		*/
 
         if t % OUTPUT_EVERY == 0 {
-            //file_writer.write_field(&mut field);
+            file_writer.write_field(&mut field);
         }
 
         /*
