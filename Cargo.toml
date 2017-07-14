@@ -1,0 +1,8 @@
+[package]
+name = "FDTDS"
+version = "0.1.0"
+authors = ["Woyten <woyten.tielesch@online.de>"]
+
+[dependencies]
+argparse = "*"
+byteorder = "*"
