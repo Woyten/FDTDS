@@ -1,5 +1,5 @@
 [package]
-name = "FDTDS"
+name = "fdtds"
 version = "0.1.0"
 authors = ["Woyten <woyten.tielesch@online.de>"]
 
