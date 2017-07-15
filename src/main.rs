@@ -1,17 +1,17 @@
 extern crate argparse;
 extern crate byteorder;
 
-use argparse::{ArgumentParser, Store, StoreConst, StoreTrue};
 use byteorder::{LittleEndian, WriteBytesExt};
 use field::{BoundaryCondition, Dimensions, Field, GridPoint};
 use output::{FileWriter, OutputFormat};
-use std::{cmp, f64};
+use std::f64;
 use std::fs::File;
 use std::io::Write;
 use std::ops::Mul;
 
 mod output;
 mod field;
+mod parse;
 
 pub type Vector = (f64, f64, f64);
 
@@ -77,83 +77,27 @@ const GHOST: Dimensions = (1, 1, 1);
 const LENGTH: Vector = (1.0, 1.0, 1.0);
 
 fn main() {
-    let mut grid = 50;
-    let mut steps = 100;
-    let mut conductivity = 0.0;
-    let mut output_format = String::new();
-    let mut name = String::from("out");
-    let mut boundary_condition = BoundaryCondition::Reflecting;
-    let mut verbose = false;
-    {
-        let mut parser = ArgumentParser::new();
-        parser.refer(&mut grid).add_option(
-            &["-g", "--grid"],
-            Store,
-            "set grid cell number",
-        );
-        parser.refer(&mut steps).add_option(
-            &["-t", "--steps"],
-            Store,
-            "set number of timesteps",
-        );
-        parser.refer(&mut conductivity).add_option(
-            &["-s", "--conductivity"],
-            Store,
-            "set conductivity in box",
-        );
-        parser.refer(&mut output_format).add_option(
-            &["-o", "--output"],
-            Store,
-            "set type of output",
-        );
-        parser.refer(&mut name).add_option(
-            &["-n", "--name"],
-            Store,
-            "set name for outputfile",
-        );
-        parser
-            .refer(&mut boundary_condition)
-            .add_option(&["-p", "--periodic"], StoreConst(BoundaryCondition::Periodic), "set periodic boundaries")
-            .add_option(&["-r", "--reflecting"], StoreConst(BoundaryCondition::Reflecting), "set reflecting boundaries")
-            .add_option(&["-a", "--absorbing"], StoreConst(BoundaryCondition::Absorbing), "set absorbing boundaries (pmls)");
-        parser.refer(&mut verbose).add_option(
-            &["-v", "--verbose"],
-            StoreTrue,
-            "set to verbose (profiling output)",
-        );
-        parser.parse_args_or_exit();
+    let parameters = parse::parse_parameters();
+
+    if parameters.verbose {
+        println!("{:#?}", parameters);
     }
 
-    grid = cmp::max(grid, 1);
-    steps = cmp::max(steps, 1);
-    conductivity = f64::max(conductivity, 0.0);
+    let grid = (parameters.grid, parameters.grid, parameters.grid);
+    let sigma_j = (parameters.conductivity, parameters.conductivity, parameters.conductivity);
 
-    let grid = (grid, grid, grid);
-    let sigma_j = (conductivity, conductivity, conductivity);
+    let mut file = File::create(parameters.output_name).unwrap();
 
-    // TODO: Verbose output
-
-    let output_format = match OutputFormat::parse(&output_format) {
-        Ok(output_format) => output_format,
-        Err(message) => {
-            let fallback = OutputFormat::Bin3d;
-            println!("{}\nFalling back to {:?}", message, fallback);
-            fallback
-        }
-    };
-
-    let mut file = File::create(name).unwrap();
-
-    let grid_0 = match output_format {
+    let grid_0 = match parameters.output_format {
         OutputFormat::Bin2d |
         OutputFormat::Asc2d => 1,
         OutputFormat::Bin3d |
         OutputFormat::Asc3d => grid.0,
     };
 
-    let to_write = [steps, grid_0, grid.1, grid.2, OUTPUT_EVERY];
+    let to_write = [parameters.steps, grid_0, grid.1, grid.2, OUTPUT_EVERY];
 
-    match output_format {
+    match parameters.output_format {
         OutputFormat::Asc3d |
         OutputFormat::Asc2d => {
             for element in &to_write {
@@ -193,9 +137,10 @@ fn main() {
 	profs_start(fdtd_integration_loop);
 	*/
 
-    let mut file_writer = FileWriter::new(file, output_format);
+    let mut file_writer = FileWriter::new(file, parameters.output_format);
 
-    for t in 0..steps {
+    let boundary_condition = parameters.boundary_condition;
+    for t in 0..parameters.steps {
         if boundary_condition == BoundaryCondition::Reflecting {
             exchange_hfields(&mut field, grid);
         }
