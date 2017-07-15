@@ -15,10 +15,10 @@ mod parse;
 
 pub type Vector = (f64, f64, f64);
 
-fn gauss_3d(xx: f64, yy: f64, zz: f64, xm: Vector, dxm: Vector, f: f64) -> f64 {
-    let r = (xx - xm.0, yy - xm.1, zz - xm.2);
+fn gauss_3d(x: Vector, xm: Vector, dxm: Vector, frequency_in_x_direction: f64) -> f64 {
+    let r = (x.0 - xm.0, x.1 - xm.1, x.2 - xm.2);
     let exponent = -sqr(r.0 / dxm.0) - sqr(r.1 / dxm.1) - sqr(r.2 / dxm.2);
-    exponent.exp() * (f * 2.0 * f64::consts::PI * r.0).sin()
+    exponent.exp() * (2.0 * f64::consts::PI * frequency_in_x_direction * r.0).sin()
 }
 
 fn sqr<T: Copy + Mul<T>>(value: T) -> T::Output {
@@ -71,7 +71,7 @@ fn exchange_efields(field: &mut Field, grid: Dimensions) {
     }
 }
 
-const SIGMA_PML: Vector = (30.0, 30.0, 30.0);
+const PML_CONDUCTIVITY: Vector = (30.0, 30.0, 30.0);
 const OUTPUT_EVERY: i32 = 10;
 const GHOST: Dimensions = (1, 1, 1);
 const LENGTH: Vector = (1.0, 1.0, 1.0);
@@ -84,7 +84,7 @@ fn main() {
     }
 
     let grid = (parameters.grid, parameters.grid, parameters.grid);
-    let sigma_j = (parameters.conductivity, parameters.conductivity, parameters.conductivity);
+    let conductivity = (parameters.conductivity, parameters.conductivity, parameters.conductivity);
 
     let mut file = File::create(parameters.output_name).unwrap();
 
@@ -122,8 +122,8 @@ fn main() {
 
     let mut field = Field::create(grid, GHOST);
     field::foreach_3d((-GHOST.0, -GHOST.1, -GHOST.2), (grid.0 + GHOST.0, grid.1 + GHOST.1, grid.2 + GHOST.2), |ix, iy, iz| {
-        field[(ix, iy, iz)].e.2 = gauss_3d(ix as f64 * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2, x0, sigma_gauss, freq);
-        field[(ix, iy, iz)].h.1 = -gauss_3d((ix as f64 + 0.5) * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2, x0, sigma_gauss, freq);
+        field[(ix, iy, iz)].e.2 = gauss_3d((ix as f64 * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2), x0, sigma_gauss, freq);
+        field[(ix, iy, iz)].h.1 = -gauss_3d(((ix as f64 + 0.5) * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2), x0, sigma_gauss, freq);
     });
 
     let cn = (dt / dx.0, dt / dx.1, dt / dx.2);
@@ -151,9 +151,9 @@ fn main() {
 
         field::foreach_3d((0, 0, 0), (grid.0 + 1, grid.1 + 1, grid.2 + 1), |ix, iy, iz| {
             let sigma = if boundary_condition == BoundaryCondition::Absorbing && is_inside_pml((ix, iy, iz), grid) {
-                SIGMA_PML
+                PML_CONDUCTIVITY
             } else {
-                sigma_j
+                conductivity
             };
             field[(ix, iy, iz)].e = (
                 (cn.1 * (field[(ix, iy, iz)].h.2 - field[(ix, iy - 1, iz)].h.2) - cn.2 * (field[(ix, iy, iz)].h.1 - field[(ix, iy, iz - 1)].h.1) +
@@ -179,9 +179,9 @@ fn main() {
 
         field::foreach_3d((-1, -1, -1), grid, |ix, iy, iz| {
             let sigma = if boundary_condition == BoundaryCondition::Absorbing && is_inside_pml((ix, iy, iz), grid) {
-                SIGMA_PML
+                PML_CONDUCTIVITY
             } else {
-                sigma_j
+                conductivity
             };
             field[(ix, iy, iz)].h = (
                 (cn.1 * (field[(ix, iy, iz)].e.2 - field[(ix, iy + 1, iz)].e.2) - cn.2 * (field[(ix, iy, iz)].e.1 - field[(ix, iy, iz + 1)].e.1) +
