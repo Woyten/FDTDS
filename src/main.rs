@@ -1,12 +1,11 @@
 extern crate argparse;
 extern crate byteorder;
 
-use byteorder::{LittleEndian, WriteBytesExt};
 use field::{BoundaryCondition, Dimensions, Field, GridPoint};
-use output::{FileWriter, OutputFormat};
+use output::{OutputFormat, OutputWriter};
 use std::f64;
 use std::fs::File;
-use std::io::Write;
+use std::io::BufWriter;
 use std::ops::Mul;
 
 mod output;
@@ -86,7 +85,12 @@ fn main() {
     let grid = (parameters.grid, parameters.grid, parameters.grid);
     let conductivity = (parameters.conductivity, parameters.conductivity, parameters.conductivity);
 
-    let mut file = File::create(parameters.output_name).unwrap();
+    let writer = match parameters.output_format {
+        OutputFormat::Asc3d |
+        OutputFormat::Asc2d => OutputWriter::Ascii,
+        OutputFormat::Bin2d |
+        OutputFormat::Bin3d => OutputWriter::Binary,
+    };
 
     let grid_0 = match parameters.output_format {
         OutputFormat::Bin2d |
@@ -95,22 +99,9 @@ fn main() {
         OutputFormat::Asc3d => grid.0,
     };
 
-    let to_write = [parameters.steps, grid_0, grid.1, grid.2, OUTPUT_EVERY];
-
-    match parameters.output_format {
-        OutputFormat::Asc3d |
-        OutputFormat::Asc2d => {
-            for element in &to_write {
-                writeln!(file, "{}", element).unwrap();
-            }
-        }
-        OutputFormat::Bin2d |
-        OutputFormat::Bin3d => {
-            for element in &to_write {
-                file.write_i32::<LittleEndian>(*element as i32).unwrap();
-            }
-        }	
-    };
+    let file = File::create(parameters.output_name).unwrap();
+    let mut target = BufWriter::new(file);
+    writer.write_metadata(&mut target, &[parameters.steps, grid_0, grid.1, grid.2, OUTPUT_EVERY]);
 
     let dx = (LENGTH.0 / grid.0 as f64, LENGTH.1 / grid.1 as f64, LENGTH.2 / grid.2 as f64);
     let inv_sum = 1.0 / sqr(dx.0) + 1.0 / sqr(dx.1) + 1.0 / sqr(dx.2);
@@ -136,8 +127,6 @@ fn main() {
 
 	profs_start(fdtd_integration_loop);
 	*/
-
-    let mut file_writer = FileWriter::new(file, parameters.output_format);
 
     let boundary_condition = parameters.boundary_condition;
     for t in 0..parameters.steps {
@@ -200,7 +189,7 @@ fn main() {
 		*/
 
         if t % OUTPUT_EVERY == 0 {
-            file_writer.write_field(&mut field);
+            writer.write_field(&mut target, &field);
         }
 
         /*

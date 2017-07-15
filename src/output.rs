@@ -1,7 +1,6 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use field::{self, Field};
-use std::fs::File;
-use std::io::BufWriter;
+use std::io::Write;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum OutputFormat {
@@ -24,14 +23,6 @@ impl OutputFormat {
 }
 
 /*
-void write_text_3d(struct field* fp,int* im, FILE* file, int output_every, int t, int e){
-                if ((t%output_every) == 0) {
-                        foreach_3d(ix, iy, iz, 0, 0) {
-                                fprintf(file,"%.9g\n",F3(fp, e, ix, iy, iz));
-                        } foreach_3d_end;
-                }
-}
-
 void write_binary_2d(struct field* fp,int* im, FILE* file, int output_every, int t, int e){
                 if ((t%output_every) == 0) {
                         foreach_2d(ix, iy, 0, 0){
@@ -49,26 +40,43 @@ void write_text_2d(struct field* fp,int* im, FILE* file, int output_every, int t
 }
  */
 
-pub struct FileWriter {
-    file: BufWriter<File>,
-    output_format: OutputFormat,
+pub enum OutputWriter {
+    Binary,
+    Ascii,
 }
 
-impl FileWriter {
-    pub fn new(file: File, output_format: OutputFormat) -> Self {
-        FileWriter {
-            file: BufWriter::new(file),
-            output_format,
+impl OutputWriter {
+    pub fn write_metadata<W: Write>(&self, target: &mut W, values: &[i32]) {
+        match *self {
+            OutputWriter::Binary => {
+                for value in values {
+                    target.write_i32::<LittleEndian>(*value).unwrap();
+                }
+            }
+            OutputWriter::Ascii => {
+                for value in values {
+                    writeln!(target, "{}", value).unwrap();
+                }
+            }
         }
     }
 
-    pub fn write_field(&mut self, field: &Field) {
+    pub fn write_field<W: Write>(&self, target: &mut W, field: &Field) {
         let ghost = field.ghost;
         let total_grid = field.total_grid;
-        field::foreach_3d((0, 0, 0), (total_grid.0 - 2 * ghost.0, total_grid.1 - 2 * ghost.1, total_grid.2 - 2 * ghost.2), |ix, iy, iz| {
-            self.file
-                .write_f64::<LittleEndian>(field[(ix, iy, iz)].e.2)
-                .unwrap();
-        });
+        match *self {
+            OutputWriter::Binary => {
+                field::foreach_3d((0, 0, 0), (total_grid.0 - 2 * ghost.0, total_grid.1 - 2 * ghost.1, total_grid.2 - 2 * ghost.2), |ix, iy, iz| {
+                    target
+                        .write_f64::<LittleEndian>(field[(ix, iy, iz)].e.2)
+                        .unwrap();
+                });
+            }
+            OutputWriter::Ascii => {
+                field::foreach_3d((0, 0, 0), (total_grid.0 - 2 * ghost.0, total_grid.1 - 2 * ghost.1, total_grid.2 - 2 * ghost.2), |ix, iy, iz| {
+                    writeln!(target, "{:.8e}", field[(ix, iy, iz)].e.2).unwrap();
+                });
+            }
+        }
     }
 }
