@@ -1,6 +1,6 @@
 use argparse::{ArgumentParser, Store, StoreConst, StoreTrue};
-use field::BoundaryCondition;
-use output::OutputFormat;
+use crate::field::BoundaryCondition;
+use crate::output::OutputFormat;
 use std::cmp;
 
 #[derive(Debug)]

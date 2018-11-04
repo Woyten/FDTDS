@@ -1,4 +1,4 @@
-use Vector;
+use crate::Vector;
 use std::ops::{Index, IndexMut};
 
 pub type Dimensions = (i32, i32, i32);

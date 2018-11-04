@@ -1,21 +1,21 @@
-[root]
-name = "fdtds"
-version = "0.1.0"
-dependencies = [
- "argparse 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
 [[package]]
 name = "argparse"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "byteorder"
-version = "1.1.0"
+version = "1.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
+[[package]]
+name = "fdtds"
+version = "0.1.0"
+dependencies = [
+ "argparse 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder 1.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
 [metadata]
-"checksum argparse 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "37bb99f5e39ee8b23b6e227f5b8f024207e8616f44aa4b8c76ecd828011667ef"
-"checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"
+"checksum argparse 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "3f8ebf5827e4ac4fd5946560e6a99776ea73b596d80898f357007317a7141e47"
+"checksum byteorder 1.2.7 (registry+https://github.com/rust-lang/crates.io-index)" = "94f88df23a25417badc922ab0f5716cc1330e87f71ddd9203b3a3ccd9cedf75d"

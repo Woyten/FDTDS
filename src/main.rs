@@ -1,8 +1,5 @@
-extern crate argparse;
-extern crate byteorder;
-
-use field::{BoundaryCondition, Dimensions, Field, GridPoint};
-use output::{OutputFormat, OutputWriter};
+use crate::field::{BoundaryCondition, Dimensions, Field, GridPoint};
+use crate::output::{OutputFormat, OutputWriter};
 use std::f64;
 use std::fs::File;
 use std::io::BufWriter;
@@ -103,7 +100,7 @@ fn main() {
     let mut target = BufWriter::new(file);
     writer.write_metadata(&mut target, &[parameters.steps, grid_0, grid.1, grid.2, OUTPUT_EVERY]);
 
-    let dx = (LENGTH.0 / grid.0 as f64, LENGTH.1 / grid.1 as f64, LENGTH.2 / grid.2 as f64);
+    let dx = (LENGTH.0 / f64::from(grid.0), LENGTH.1 / f64::from(grid.1), LENGTH.2 / f64::from(grid.2));
     let inv_sum = 1.0 / sqr(dx.0) + 1.0 / sqr(dx.1) + 1.0 / sqr(dx.2);
     let dt = 0.75 / inv_sum.sqrt();
 
@@ -113,8 +110,8 @@ fn main() {
 
     let mut field = Field::create(grid, GHOST);
     field::foreach_3d((-GHOST.0, -GHOST.1, -GHOST.2), (grid.0 + GHOST.0, grid.1 + GHOST.1, grid.2 + GHOST.2), |ix, iy, iz| {
-        field[(ix, iy, iz)].e.2 = gauss_3d((ix as f64 * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2), x0, sigma_gauss, freq);
-        field[(ix, iy, iz)].h.1 = -gauss_3d(((ix as f64 + 0.5) * dx.0, iy as f64 * dx.1, (iz as f64 + 0.5) * dx.2), x0, sigma_gauss, freq);
+        field[(ix, iy, iz)].e.2 = gauss_3d((f64::from(ix) * dx.0, f64::from(iy) * dx.1, (f64::from(iz) + 0.5) * dx.2), x0, sigma_gauss, freq);
+        field[(ix, iy, iz)].h.1 = -gauss_3d(((f64::from(ix) + 0.5) * dx.0, f64::from(iy) * dx.1, (f64::from(iz) + 0.5) * dx.2), x0, sigma_gauss, freq);
     });
 
     let cn = (dt / dx.0, dt / dx.1, dt / dx.2);

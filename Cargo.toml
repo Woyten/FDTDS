@@ -2,6 +2,7 @@
 name = "fdtds"
 version = "0.1.0"
 authors = ["Woyten <woyten.tielesch@online.de>"]
+edition = "2018"
 
 [dependencies]
 argparse = "*"
